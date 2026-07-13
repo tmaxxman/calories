@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Meal Calc">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <title>Meal Calorie Calculator</title>
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <label class="meal-picker">
+        <span class="visually-hidden">Meal</span>
+        <select id="meal-select" aria-label="Select meal"></select>
+      </label>
+      <h1 id="meal-title" class="meal-title">Meal</h1>
+    </header>
+
+    <section class="card" aria-label="Configurations">
+      <div class="section-label">Presets &amp; saved</div>
+      <div id="config-chips" class="chips"></div>
+      <button id="save-btn" class="btn-save" type="button">＋ Save current as…</button>
+    </section>
+
+    <section class="card total-card" aria-label="Whole meal total">
+      <div class="section-label">Whole meal</div>
+      <div class="total-row">
+        <button id="total-down" class="step step-lg" type="button" aria-label="Decrease total">−</button>
+        <div class="total-value">
+          <input id="total-input" class="num total-num" type="number" step="5" min="0"
+                 inputmode="numeric" aria-label="Total calories">
+          <span class="unit">cal total</span>
+        </div>
+        <button id="total-up" class="step step-lg" type="button" aria-label="Increase total">+</button>
+      </div>
+      <p class="hint">± steps by 5 and keeps ingredient ratios stable. Type a number to hit an exact target.</p>
+    </section>
+
+    <section class="card" aria-label="Ingredients">
+      <div class="section-label">Ingredients</div>
+      <div id="ingredients"></div>
+    </section>
+
+    <footer class="app-foot">
+      Grams are rounded to the nearest gram. Edit meals in <code>meals.js</code>.
+    </footer>
+  </main>
+
+  <script src="meals.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

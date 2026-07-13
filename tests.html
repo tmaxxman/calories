@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meal Calc — math tests</title>
+  <style>
+    body { font: 14px/1.5 ui-monospace, Menlo, Consolas, monospace; margin: 24px; max-width: 760px; }
+    h1 { font-size: 18px; }
+    .pass { color: #15803d; }
+    .fail { color: #b91c1c; font-weight: 700; }
+    .summary { margin: 14px 0; padding: 10px 12px; border-radius: 8px; font-weight: 700; }
+    .ok { background: #dcfce7; color: #14532d; }
+    .bad { background: #fee2e2; color: #7f1d1d; }
+    li { margin: 2px 0; }
+  </style>
+</head>
+<body>
+  <h1>Meal Calc — core math tests</h1>
+  <div id="summary" class="summary"></div>
+  <ul id="results"></ul>
+
+  <!-- meals.js intentionally NOT loaded: app.js exposes CalMath, then bails before init -->
+  <script src="app.js"></script>
+  <script>
+    var M = window.CalMath;
+    var results = document.getElementById('results');
+    var pass = 0, fail = 0;
+
+    function ok(cond, msg) {
+      var li = document.createElement('li');
+      li.className = cond ? 'pass' : 'fail';
+      li.textContent = (cond ? '✓ ' : '✗ ') + msg;
+      results.appendChild(li);
+      cond ? pass++ : fail++;
+    }
+
+    function sum(o) { return M.totalOf(o); }
+    function allMultiplesOf5(o) { for (var k in o) if (o[k] % 5 !== 0) return false; return true; }
+
+    // roundTo5
+    ok(M.roundTo5(0) === 0, 'roundTo5(0) = 0');
+    ok(M.roundTo5(12) === 10, 'roundTo5(12) = 10');
+    ok(M.roundTo5(13) === 15, 'roundTo5(13) = 15');
+    ok(M.roundTo5(647) === 645, 'roundTo5(647) = 645');
+
+    // gramsFor
+    ok(M.gramsFor(300, 2.06) === 146, 'gramsFor(300, 2.06) = 146');
+    ok(M.gramsFor(100, 1.22) === 82, 'gramsFor(100, 1.22) = 82');
+
+    var names = ['Salmon', 'Rice', 'Edamame'];
+    var base = { Salmon: 300, Rice: 250, Edamame: 100 }; // total 650
+
+    // scaleToTotal: exact sum + all multiples of 5, across a sweep of targets
+    var sweepOk = true, multOk = true;
+    for (var T = 200; T <= 1200; T += 5) {
+      var a = M.scaleToTotal(names, base, T);
+      if (sum(a) !== T) sweepOk = false;
+      if (!allMultiplesOf5(a)) multOk = false;
+    }
+    ok(sweepOk, 'scaleToTotal sums EXACTLY to target across 200..1200');
+    ok(multOk, 'scaleToTotal keeps every ingredient a multiple of 5');
+
+    // ratios stay stable within rounding (<= 3 cal drift per ingredient at 650)
+    var a650 = M.scaleToTotal(names, base, 650);
+    ok(a650.Salmon === 300 && a650.Rice === 250 && a650.Edamame === 100,
+       'scaling base to its own total is a no-op (300/250/100)');
+
+    var a1300 = M.scaleToTotal(names, base, 1300); // exact double
+    ok(a1300.Salmon === 600 && a1300.Rice === 500 && a1300.Edamame === 200,
+       'doubling total doubles each ingredient (600/500/200)');
+
+    // non-multiple-of-5 target snaps to nearest 5 and still sums exactly
+    var a647 = M.scaleToTotal(names, base, 647);
+    ok(sum(a647) === 645, 'target 647 snaps to 645 and sums exactly');
+
+    // odd target that forces largest-remainder distribution
+    var a655 = M.scaleToTotal(names, base, 655);
+    ok(sum(a655) === 655 && allMultiplesOf5(a655), '655 distributes the extra 5 cleanly');
+
+    // ratio drift bound: each ingredient within 3 cal of ideal for a range of totals
+    var driftOk = true;
+    [305, 515, 705, 905].forEach(function (T) {
+      var a = M.scaleToTotal(names, base, T);
+      names.forEach(function (n) {
+        var ideal = (base[n] / 650) * T;
+        if (Math.abs(a[n] - ideal) > 3) driftOk = false;
+      });
+    });
+    ok(driftOk, 'ratio drift stays within ~3 cal of ideal per ingredient');
+
+    // zero / missing weights -> even split summing to target
+    var even = M.scaleToTotal(names, {}, 300);
+    ok(sum(even) === 300 && allMultiplesOf5(even), 'no weights -> even split, exact sum');
+
+    // zero target -> all zero
+    var zero = M.scaleToTotal(names, base, 0);
+    ok(sum(zero) === 0, 'target 0 -> all zero');
+
+    var s = document.getElementById('summary');
+    s.textContent = fail === 0 ? ('ALL ' + pass + ' TESTS PASSED') : (fail + ' FAILED, ' + pass + ' passed');
+    s.className = 'summary ' + (fail === 0 ? 'ok' : 'bad');
+  </script>
+</body>
+</html>

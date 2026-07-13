@@ -1,0 +1,14 @@
+{
+  "name": "Meal Calorie Calculator",
+  "short_name": "Meal Calc",
+  "description": "Adjust ingredient grams to hit a target calorie count for your regular meals.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0f12",
+  "theme_color": "#0f766e",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
