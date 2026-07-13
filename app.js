@@ -129,16 +129,37 @@
 
   var savedConfigs = load(KEYS.saved, {}); // { mealId: [ {id,name,allocations} ] }
   var session = load(KEYS.session, null);
+  var savedChips = (session && session.chips) || {}; // { mealId: last selected chip id }
 
   var state = {
     activeMealId: (session && mealById(session.activeMealId)) ? session.activeMealId : MEALS[0].id,
-    perMeal: {}, // { mealId: { allocations, selectedId } }
+    perMeal: {},  // { mealId: { allocations, selectedId } }
+    lastChip: {}, // { mealId: last selected chip id, restored on next load }
   };
 
-  // Every meal starts on its first preset (the 500 chip) on each load.
+  // Restore each meal to its last selected chip; untouched meals fall back to 500.
   MEALS.forEach(function (meal) {
-    state.perMeal[meal.id] = defaultSlot(meal);
+    var slot = slotForChip(meal, savedChips[meal.id]);
+    state.perMeal[meal.id] = slot;
+    state.lastChip[meal.id] = slot.selectedId;
   });
+
+  // Resolve a saved chip id to a slot; unknown/missing chip -> first preset (500).
+  function slotForChip(meal, chipId) {
+    if (chipId && chipId.indexOf('preset:') === 0) {
+      var p = parseInt(chipId.slice(7), 10);
+      if ((meal.presets || []).indexOf(p) !== -1) {
+        return { allocations: scaleToTotal(namesOf(meal), meal.base, p), selectedId: chipId };
+      }
+    } else if (chipId && chipId.indexOf('saved:') === 0) {
+      var sid = chipId.slice(6);
+      var list = savedConfigs[meal.id] || [];
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].id === sid) return { allocations: sanitize(meal, list[i].allocations), selectedId: chipId };
+      }
+    }
+    return defaultSlot(meal);
+  }
 
   // Initial slot for a meal: the first preset applied (falls back to the base split).
   function defaultSlot(meal) {
@@ -166,9 +187,9 @@
   }
 
   function persist() {
-    // Only the last active meal persists across reloads; every meal starts on
-    // the 500 preset each load (see defaultSlot).
-    save(KEYS.session, { activeMealId: state.activeMealId });
+    // Remember the last active meal and each meal's last selected chip. Untouched
+    // meals fall back to the 500 preset on load (see slotForChip / defaultSlot).
+    save(KEYS.session, { activeMealId: state.activeMealId, chips: state.lastChip });
     save(KEYS.saved, savedConfigs);
   }
 
@@ -220,6 +241,7 @@
     var slot = activeSlot();
     slot.allocations = scaleToTotal(namesOf(meal), meal.base, presetTotal); // scale from BASE ratio
     slot.selectedId = 'preset:' + presetTotal;
+    state.lastChip[meal.id] = slot.selectedId;
     persist();
     syncValues();
   }
@@ -229,6 +251,7 @@
     var slot = activeSlot();
     slot.allocations = sanitize(meal, cfg.allocations);
     slot.selectedId = 'saved:' + cfg.id;
+    state.lastChip[meal.id] = slot.selectedId;
     persist();
     syncValues();
   }
@@ -243,6 +266,7 @@
     if (!savedConfigs[meal.id]) savedConfigs[meal.id] = [];
     savedConfigs[meal.id].push(cfg);
     slot.selectedId = 'saved:' + id;
+    state.lastChip[meal.id] = slot.selectedId;
     persist();
     renderAll();
   }
@@ -253,6 +277,7 @@
     savedConfigs[meal.id] = list.filter(function (c) { return c.id !== cfgId; });
     var slot = activeSlot();
     if (slot.selectedId === 'saved:' + cfgId) slot.selectedId = null;
+    if (state.lastChip[meal.id] === 'saved:' + cfgId) state.lastChip[meal.id] = null;
     persist();
     renderAll();
   }
