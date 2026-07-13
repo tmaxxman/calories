@@ -23,8 +23,9 @@ const MEALS = [
       { name: 'Edamame',           calPerG: 1.25, emoji: '🫘' }, // 125 cal / 100g
       { name: 'Snap Peas in EVOO', calPerG: 0.8,  emoji: '🫛' }, // 80 cal / 100g
     ],
-    // Snap peas default to 0 cal, so all presets leave them at 0 until you add some.
-    base: { Salmon: 300, Rice: 250, Edamame: 100, 'Snap Peas in EVOO': 0 }, // 650 cal default
+    // Ratio target (grams): Salmon 233 / Rice 165 / Snap Peas 150; Edamame off (0).
+    // base cal = grams * calPerG, so the default/preset gram ratios match those portions.
+    base: { Salmon: 466, Rice: 215, Edamame: 0, 'Snap Peas in EVOO': 120 }, // ~801 cal full portion
     presets: [500, 600, 700],
   },
   {
@@ -35,7 +36,8 @@ const MEALS = [
       { name: 'Potatoes Cooked in EVOO', calPerG: 1.2, emoji: '🥔' }, // 120 cal / 100g
       { name: 'Grilled Peppers',         calPerG: 0.7, emoji: '🫑' }, // 70 cal / 100g
     ],
-    base: { 'Taco Meat': 300, 'Potatoes Cooked in EVOO': 200, 'Grilled Peppers': 50 }, // 550 cal default
+    // Ratio target (grams): Taco Meat 180 / Potatoes 190 / Peppers 100 (base cal = grams * calPerG).
+    base: { 'Taco Meat': 468, 'Potatoes Cooked in EVOO': 228, 'Grilled Peppers': 70 }, // ~766 cal full portion
     presets: [500, 600, 700],
   },
   {
@@ -46,7 +48,8 @@ const MEALS = [
       { name: 'Sweet Potatoes Cooked in EVOO', calPerG: 1.24, emoji: '🍠' }, // 124 cal / 100g
       { name: 'Avocado',                       calPerG: 1.64, emoji: '🥑' }, // 164 cal / 100g
     ],
-    base: { Chicken: 300, 'Sweet Potatoes Cooked in EVOO': 150, Avocado: 100 }, // 550 cal default
+    // Ratio target (grams): Chicken 252 / Sweet Potatoes 198 / Avocado 55 (base cal = grams * calPerG).
+    base: { Chicken: 504, 'Sweet Potatoes Cooked in EVOO': 246, Avocado: 90 }, // ~840 cal full portion
     presets: [500, 600, 700],
   },
 ];
