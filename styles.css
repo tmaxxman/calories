@@ -191,9 +191,25 @@ body {
 .row:first-child { border-top: 0; padding-top: 0; }
 .row:last-child { padding-bottom: 0; }
 
-.row-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
-.row-name { font-weight: 600; font-size: 16px; }
+.row-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.row-name { flex: 1; min-width: 0; font-weight: 600; font-size: 16px; }
 .row-emoji { margin-right: 7px; font-size: 18px; }
+
+/* per-ingredient lock toggle */
+.lock {
+  flex: none;
+  width: 40px; height: 40px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--muted);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.lock.lock-on { background: var(--accent-soft); border-color: transparent; color: var(--accent-text); }
+.lock .ic-closed { display: none; }
+.lock.lock-on .ic-open { display: none; }
+.lock.lock-on .ic-closed { display: inline-block; }
 /* grams is the hero number during meal prep */
 .row-grams { display: inline-flex; align-items: baseline; gap: 3px; color: var(--accent-text); white-space: nowrap; }
 .g-num { font-weight: 800; font-size: 26px; line-height: 1; }
@@ -222,6 +238,11 @@ body {
   background: var(--bg);
   color: var(--ink);
 }
+
+/* locked ingredient: dim its steppers, keep the pinned value readable */
+.step:disabled { opacity: .4; cursor: default; box-shadow: none; }
+.row.locked .row-cal { border-color: var(--accent); background: var(--accent-soft); }
+.row-cal:disabled { opacity: 1; color: var(--ink); -webkit-text-fill-color: var(--ink); }
 
 .stepper .unit {
   font-size: 12px;

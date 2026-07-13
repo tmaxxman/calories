@@ -24,53 +24,72 @@
   }
 
   /*
-   * Scale a meal to a target total while keeping the ratio between ingredients
-   * stable. The TOTAL is snapped to the nearest 5 cal, then split across the
-   * ingredients in proportion to `weights` (the current allocation, or the
-   * meal's base). Per-ingredient values are whole calories distributed with the
-   * largest-remainder method so they sum EXACTLY to the (rounded) total.
-   *
-   * Distributing in 1-cal units (not 5-cal units) is what makes EVERY ingredient
-   * shift together when the total nudges by 5 — instead of the whole +5 landing
-   * on a single ingredient.
-   *
-   *   names        ordered ingredient names
-   *   weights      { name: number } — the ratio source (current alloc, or base)
-   *   targetTotal  desired total calories (snapped to nearest 5)
+   * Split an exact whole-number `total` across `names` in proportion to `weights`,
+   * using the largest-remainder method so the parts sum EXACTLY to `total`.
+   * Distributing in 1-cal units is what makes EVERY ingredient shift together
+   * instead of the whole change landing on one.
    */
-  function scaleToTotal(names, weights, targetTotal) {
-    var T = Math.max(0, roundTo5(targetTotal)); // total stays on the 5-cal grid
+  function apportion(names, weights, total) {
+    total = Math.max(0, Math.round(total));
     var alloc = {};
     var i;
+    if (!names.length) return alloc;
 
     var wsum = 0;
     for (i = 0; i < names.length; i++) wsum += Math.max(0, weights[names[i]] || 0);
 
     // No usable ratio -> even split.
     if (wsum <= 0) {
-      var each = names.length ? Math.floor(T / names.length) : 0;
+      var each = Math.floor(total / names.length);
       for (i = 0; i < names.length; i++) alloc[names[i]] = each;
-      var leftover = T - each * names.length;
+      var leftover = total - each * names.length;
       for (i = 0; i < leftover; i++) alloc[names[i]] += 1;
       return alloc;
     }
 
-    // Ideal proportional quota per ingredient (in whole calories).
     var quotas = [];
     for (i = 0; i < names.length; i++) {
-      var q = (Math.max(0, weights[names[i]] || 0) / wsum) * T;
+      var q = (Math.max(0, weights[names[i]] || 0) / wsum) * total;
       var base = Math.floor(q);
       quotas.push({ name: names[i], base: base, frac: q - base });
       alloc[names[i]] = base;
     }
-
-    // Hand out the leftover calories to the largest fractional remainders.
     var assigned = 0;
     for (i = 0; i < quotas.length; i++) assigned += quotas[i].base;
-    var rem = T - assigned;
+    var rem = total - assigned;
     quotas.sort(function (a, b) { return b.frac - a.frac; });
     for (i = 0; i < rem; i++) alloc[quotas[i % quotas.length].name] += 1;
+    return alloc;
+  }
 
+  // Scale a meal to a target total (snapped to nearest 5), keeping ingredient ratios stable.
+  function scaleToTotal(names, weights, targetTotal) {
+    return apportion(names, weights, Math.max(0, roundTo5(targetTotal)));
+  }
+
+  /*
+   * Like scaleToTotal, but ingredients in `locked` keep their current calories.
+   * The remaining calories (target minus the locked sum) are apportioned across
+   * the UNLOCKED ingredients by `weights`, so they keep their mutual ratios.
+   * If the locked sum already meets/exceeds the target, unlocked go to 0 (the
+   * total can't drop below the locked calories).
+   */
+  function distributeWithLocks(names, weights, targetTotal, locked, current) {
+    locked = locked || {};
+    current = current || {};
+    var T = Math.max(0, roundTo5(targetTotal));
+    var alloc = {};
+    var lockedSum = 0;
+    var unlocked = [];
+    names.forEach(function (n) {
+      if (locked[n]) { alloc[n] = Math.max(0, Math.round(current[n] || 0)); lockedSum += alloc[n]; }
+      else unlocked.push(n);
+    });
+    var rem = Math.max(0, T - lockedSum);
+    var uw = {};
+    unlocked.forEach(function (n) { uw[n] = Math.max(0, weights[n] || 0); });
+    var part = apportion(unlocked, uw, rem);
+    unlocked.forEach(function (n) { alloc[n] = part[n] || 0; });
     return alloc;
   }
 
@@ -79,7 +98,9 @@
     roundTo5: roundTo5,
     gramsFor: gramsFor,
     totalOf: totalOf,
+    apportion: apportion,
     scaleToTotal: scaleToTotal,
+    distributeWithLocks: distributeWithLocks,
   };
 
   // tests.html loads only the math above; bail out before touching the DOM.
@@ -140,6 +161,7 @@
   // Restore each meal to its last selected chip; untouched meals fall back to 500.
   MEALS.forEach(function (meal) {
     var slot = slotForChip(meal, savedChips[meal.id]);
+    slot.locked = {}; // { ingredientName: true } — in-memory only, cleared on reload
     state.perMeal[meal.id] = slot;
     state.lastChip[meal.id] = slot.selectedId;
   });
@@ -207,8 +229,17 @@
     renderAll();
   }
 
+  function toggleLock(name) {
+    var slot = activeSlot();
+    if (slot.locked[name]) delete slot.locked[name];
+    else slot.locked[name] = true;
+    // locking only pins the value; it doesn't change allocations or the selected chip
+    syncValues();
+  }
+
   function adjustIngredient(name, deltaSteps) {
     var slot = activeSlot();
+    if (slot.locked[name]) return; // locked ingredients can't be changed
     slot.allocations[name] = Math.max(0, slot.allocations[name] + deltaSteps * STEP);
     slot.selectedId = null; // now a custom, unsaved state
     persist();
@@ -217,6 +248,7 @@
 
   function setIngredient(name, value) {
     var slot = activeSlot();
+    if (slot.locked[name]) return;
     slot.allocations[name] = Math.max(0, Math.round(value || 0));
     slot.selectedId = null;
     persist();
@@ -226,7 +258,8 @@
   function scaleTotal(targetTotal) {
     var meal = activeMeal();
     var slot = activeSlot();
-    slot.allocations = scaleToTotal(namesOf(meal), slot.allocations, targetTotal);
+    // locked ingredients stay put; unlocked absorb the change by their current ratio
+    slot.allocations = distributeWithLocks(namesOf(meal), slot.allocations, targetTotal, slot.locked, slot.allocations);
     slot.selectedId = null;
     persist();
     syncValues();
@@ -239,7 +272,8 @@
   function applyPreset(presetTotal) {
     var meal = activeMeal();
     var slot = activeSlot();
-    slot.allocations = scaleToTotal(namesOf(meal), meal.base, presetTotal); // scale from BASE ratio
+    // scale from the BASE ratio to the preset total, but keep locked ingredients fixed
+    slot.allocations = distributeWithLocks(namesOf(meal), meal.base, presetTotal, slot.locked, slot.allocations);
     slot.selectedId = 'preset:' + presetTotal;
     state.lastChip[meal.id] = slot.selectedId;
     persist();
@@ -249,7 +283,8 @@
   function applySaved(cfg) {
     var meal = activeMeal();
     var slot = activeSlot();
-    slot.allocations = sanitize(meal, cfg.allocations);
+    slot.allocations = sanitize(meal, cfg.allocations); // a saved snapshot loads exactly
+    slot.locked = {};                                   // ...so clear any locks
     slot.selectedId = 'saved:' + cfg.id;
     state.lastChip[meal.id] = slot.selectedId;
     persist();
@@ -353,6 +388,11 @@
     }, [label]);
   }
 
+  // open + closed padlock; CSS shows one based on the .lock-on class. Uses currentColor.
+  var LOCK_SVG =
+    '<svg class="ic-open" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>' +
+    '<svg class="ic-closed" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+
   function renderIngredients() {
     var meal = activeMeal();
     var wrap = el.ingredients;
@@ -361,7 +401,15 @@
     meal.ingredients.forEach(function (ing) {
       var row = h('div', { 'class': 'row', 'data-name': ing.name });
 
+      var lockBtn = h('button', {
+        'class': 'lock', type: 'button', 'data-lock': ing.name, 'aria-pressed': 'false',
+        'aria-label': 'Lock ' + ing.name + ' calories',
+        onclick: function () { toggleLock(ing.name); },
+      });
+      lockBtn.innerHTML = LOCK_SVG;
+
       var head = h('div', { 'class': 'row-head' }, [
+        lockBtn,
         h('span', { 'class': 'row-name' }, [
           h('span', { 'class': 'row-emoji', 'aria-hidden': 'true', text: ing.emoji || '' }),
           ing.name,
@@ -409,12 +457,28 @@
 
     meal.ingredients.forEach(function (ing) {
       var cal = slot.allocations[ing.name];
+      var locked = !!slot.locked[ing.name];
       var input = el.ingredients.querySelector('[data-cal="' + cssEsc(ing.name) + '"]');
       var gramsEl = el.ingredients.querySelector('[data-grams="' + cssEsc(ing.name) + '"]');
       var barEl = el.ingredients.querySelector('[data-bar="' + cssEsc(ing.name) + '"]');
       if (input && document.activeElement !== input) input.value = cal;
       if (gramsEl) gramsEl.innerHTML = gramsHTML(gramsFor(cal, calPerGOf(meal, ing.name)));
       if (barEl) barEl.style.width = (total > 0 ? (cal / total) * 100 : 0) + '%';
+
+      // reflect lock state: disable this ingredient's steppers/input, toggle the lock button
+      var row = input && input.closest ? input.closest('.row') : null;
+      if (row) {
+        row.classList.toggle('locked', locked);
+        var steps = row.querySelectorAll('.step');
+        for (var s = 0; s < steps.length; s++) steps[s].disabled = locked;
+        var lockBtn = row.querySelector('.lock');
+        if (lockBtn) {
+          lockBtn.classList.toggle('lock-on', locked);
+          lockBtn.setAttribute('aria-pressed', locked ? 'true' : 'false');
+          lockBtn.setAttribute('aria-label', (locked ? 'Unlock ' : 'Lock ') + ing.name + ' calories');
+        }
+      }
+      if (input) input.disabled = locked;
     });
 
     // highlight the active config chip
