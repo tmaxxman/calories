@@ -16,7 +16,7 @@
 const MEALS = [
   {
     id: 'salmon-rice-edamame',
-    name: 'Salmon / Rice / Edamame',
+    name: 'Salmon & Rice',
     ingredients: [
       { name: 'Salmon',  calPerG: 2.06 }, // baked salmon, ~206 cal / 100g
       { name: 'Rice',    calPerG: 1.30 }, // cooked white rice, ~130 cal / 100g
@@ -26,25 +26,25 @@ const MEALS = [
     presets: [500, 600, 700],
   },
   {
-    id: 'chicken-sweetpotato-broccoli',
-    name: 'Chicken / Sweet Potato / Broccoli',
+    id: 'taco-bowl',
+    name: 'Taco Bowl',
     ingredients: [
-      { name: 'Chicken',      calPerG: 1.65 }, // cooked breast, ~165 cal / 100g
-      { name: 'Sweet Potato', calPerG: 0.90 }, // cooked, ~90 cal / 100g
-      { name: 'Broccoli',     calPerG: 0.35 }, // cooked, ~35 cal / 100g
+      { name: 'Taco Meat', calPerG: 2.45 }, // seasoned ground beef, cooked, ~245 cal / 100g
+      { name: 'Potatoes',  calPerG: 0.93 }, // cooked, ~93 cal / 100g
+      { name: 'Peppers',   calPerG: 0.30 }, // bell peppers, ~30 cal / 100g
     ],
-    base: { Chicken: 300, 'Sweet Potato': 200, Broccoli: 50 }, // 550 cal default
+    base: { 'Taco Meat': 300, Potatoes: 200, Peppers: 50 }, // 550 cal default
     presets: [500, 600, 700],
   },
   {
-    id: 'yogurt-granola-berries',
-    name: 'Yogurt / Granola / Berries',
+    id: 'chicken-bowl',
+    name: 'Chicken Bowl',
     ingredients: [
-      { name: 'Greek Yogurt', calPerG: 0.59 }, // nonfat, ~59 cal / 100g
-      { name: 'Granola',      calPerG: 4.70 }, // ~470 cal / 100g
-      { name: 'Berries',      calPerG: 0.57 }, // blueberries, ~57 cal / 100g
+      { name: 'Chicken',      calPerG: 1.65 }, // cooked breast, ~165 cal / 100g
+      { name: 'Sweet Potato', calPerG: 0.90 }, // cooked, ~90 cal / 100g
+      { name: 'Avocado',      calPerG: 1.60 }, // ~160 cal / 100g
     ],
-    base: { 'Greek Yogurt': 150, Granola: 200, Berries: 50 }, // 400 cal default
-    presets: [350, 450, 550],
+    base: { Chicken: 300, 'Sweet Potato': 150, Avocado: 100 }, // 550 cal default
+    presets: [500, 600, 700],
   },
 ];
