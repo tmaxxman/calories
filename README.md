@@ -57,5 +57,10 @@ It's fully static, so Pages needs no build. After pushing to a **public** repo, 
 Pages → *Deploy from a branch* → `main` / root. The app will be at
 `https://<user>.github.io/<repo>/`.
 
+**Before each deploy, run `./bump.sh`** — it stamps a fresh `?v=` token onto the `app.js`,
+`meals.js`, and `styles.css` links in `index.html`. GitHub Pages caches files for ~10
+minutes, so without this a page can load a new `index.html` against a stale cached script
+and misbehave. Bumping the token makes a fresh page always fetch matching files.
+
 Icons are a single `icon.svg`; add PNG icons to `manifest.webmanifest` later if you want a
 crisper iOS home-screen icon.

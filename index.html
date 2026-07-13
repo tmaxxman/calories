@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon.svg">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260713124345">
   <title>Meal Calorie Calculator</title>
 </head>
 <body>
@@ -47,7 +47,8 @@
     </section>
   </main>
 
-  <script src="meals.js"></script>
-  <script src="app.js"></script>
+  <!-- ?v= is a cache-busting token; run ./bump.sh before each deploy to refresh it -->
+  <script src="meals.js?v=20260713124345"></script>
+  <script src="app.js?v=20260713124345"></script>
 </body>
 </html>
