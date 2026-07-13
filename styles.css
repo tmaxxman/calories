@@ -103,7 +103,7 @@ body {
 }
 
 /* ---------- config chips ---------- */
-.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .chip {
   display: inline-flex;
@@ -139,18 +139,9 @@ body {
 }
 .chip-x:hover { opacity: 1; }
 
-.btn-save {
-  width: 100%;
-  min-height: var(--tap);
-  border: 1px dashed var(--line);
-  background: transparent;
-  color: var(--accent-text);
-  font-weight: 600;
-  font-size: 15px;
-  border-radius: var(--radius);
-  cursor: pointer;
-}
-.btn-save:hover { border-color: var(--accent); }
+/* the save action, same footprint as a preset chip but visually an action */
+.chip-save { border-style: dashed; color: var(--accent-text); background: transparent; }
+.chip-save:hover { border-color: var(--accent); }
 
 /* ---------- total ---------- */
 .total-row {
@@ -190,7 +181,7 @@ body {
   border: 1px solid var(--line);
   background: var(--bg);
   color: var(--ink);
-  font-size: 22px;
+  font-size: 17px;
   font-weight: 700;
   border-radius: 12px;
   cursor: pointer;
@@ -198,7 +189,7 @@ body {
   user-select: none;
 }
 .step:active { background: var(--accent-soft); }
-.step-lg { font-size: 26px; }
+.step-lg { font-size: 20px; }
 
 /* ---------- ingredient rows ---------- */
 .row { padding: 12px 0; border-top: 1px solid var(--line); }
@@ -207,6 +198,7 @@ body {
 
 .row-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
 .row-name { font-weight: 600; font-size: 16px; }
+.row-emoji { margin-right: 7px; font-size: 18px; }
 .row-grams { font-weight: 700; font-size: 16px; color: var(--accent-text); }
 
 .stepper {
@@ -242,10 +234,6 @@ body {
 
 .bar { margin-top: 10px; height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; }
 .bar-fill { height: 100%; background: var(--bar); border-radius: 999px; transition: width .12s ease; }
-
-/* ---------- footer ---------- */
-.app-foot { font-size: 12px; color: var(--muted); text-align: center; }
-.app-foot code { background: var(--card); padding: 1px 5px; border-radius: 5px; border: 1px solid var(--line); }
 
 /* ---------- desktop niceties ---------- */
 @media (min-width: 600px) {

@@ -226,15 +226,6 @@
     syncValues();
   }
 
-  function resetToDefault() {
-    var meal = activeMeal();
-    var slot = activeSlot();
-    slot.allocations = cloneBase(meal);
-    slot.selectedId = 'default';
-    persist();
-    syncValues();
-  }
-
   function applySaved(cfg) {
     var meal = activeMeal();
     var slot = activeSlot();
@@ -303,9 +294,6 @@
     var bar = el.configChips;
     bar.innerHTML = '';
 
-    // default chip
-    bar.appendChild(chip('Default', 'default', function () { resetToDefault(); }));
-
     // built-in presets
     (meal.presets || []).forEach(function (p) {
       bar.appendChild(chip(p + ' cal', 'preset:' + p, function () { applyPreset(p); }));
@@ -323,6 +311,15 @@
       }));
       bar.appendChild(c);
     });
+
+    // save-current-as action, styled like a chip, at the end of the row
+    bar.appendChild(h('button', {
+      'class': 'chip chip-save', type: 'button', 'aria-label': 'Save current as a new configuration',
+      onclick: function () {
+        var name = prompt('Name this configuration (e.g. "Big lunch"):');
+        if (name && name.trim()) saveCurrentAs(name.trim());
+      },
+    }, ['+ Save']));
   }
 
   function chip(label, id, onclick) {
@@ -342,7 +339,10 @@
       var row = h('div', { 'class': 'row', 'data-name': ing.name });
 
       var head = h('div', { 'class': 'row-head' }, [
-        h('span', { 'class': 'row-name', text: ing.name }),
+        h('span', { 'class': 'row-name' }, [
+          h('span', { 'class': 'row-emoji', 'aria-hidden': 'true', text: ing.emoji || '' }),
+          ing.name,
+        ]),
         h('span', { 'class': 'row-grams', 'data-grams': ing.name }),
       ]);
 
@@ -354,12 +354,12 @@
       input.addEventListener('input', function () { liveGrams(ing.name, parseFloat(input.value)); });
 
       var controls = h('div', { 'class': 'stepper' }, [
-        h('button', { 'class': 'step', 'aria-label': 'Decrease ' + ing.name,
-          onclick: function () { adjustIngredient(ing.name, -1); }, text: '−' }),
+        h('button', { 'class': 'step', 'aria-label': 'Decrease ' + ing.name + ' by 5',
+          onclick: function () { adjustIngredient(ing.name, -1); }, text: '−5' }),
         input,
         h('span', { 'class': 'unit', text: 'cal' }),
-        h('button', { 'class': 'step', 'aria-label': 'Increase ' + ing.name,
-          onclick: function () { adjustIngredient(ing.name, 1); }, text: '+' }),
+        h('button', { 'class': 'step', 'aria-label': 'Increase ' + ing.name + ' by 5',
+          onclick: function () { adjustIngredient(ing.name, 1); }, text: '+5' }),
       ]);
 
       var bar = h('div', { 'class': 'bar' }, [h('div', { 'class': 'bar-fill', 'data-bar': ing.name })]);
@@ -423,7 +423,6 @@
     el.mealSelect = document.getElementById('meal-select');
     el.mealTitle = document.getElementById('meal-title');
     el.configChips = document.getElementById('config-chips');
-    el.saveBtn = document.getElementById('save-btn');
     el.totalInput = document.getElementById('total-input');
     el.totalDown = document.getElementById('total-down');
     el.totalUp = document.getElementById('total-up');
@@ -433,10 +432,6 @@
     el.totalDown.addEventListener('click', function () { stepTotal(-1); });
     el.totalUp.addEventListener('click', function () { stepTotal(1); });
     el.totalInput.addEventListener('change', function () { scaleTotal(parseFloat(el.totalInput.value)); });
-    el.saveBtn.addEventListener('click', function () {
-      var name = prompt('Name this configuration (e.g. "Big lunch"):');
-      if (name && name.trim()) saveCurrentAs(name.trim());
-    });
 
     renderAll();
   }

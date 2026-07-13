@@ -26,31 +26,26 @@
     <section class="card" aria-label="Configurations">
       <div class="section-label">Presets &amp; saved</div>
       <div id="config-chips" class="chips"></div>
-      <button id="save-btn" class="btn-save" type="button">＋ Save current as…</button>
     </section>
 
     <section class="card total-card" aria-label="Whole meal total">
       <div class="section-label">Whole meal</div>
       <div class="total-row">
-        <button id="total-down" class="step step-lg" type="button" aria-label="Decrease total">−</button>
+        <button id="total-down" class="step step-lg" type="button" aria-label="Decrease total by 5">−5</button>
         <div class="total-value">
           <input id="total-input" class="num total-num" type="number" step="5" min="0"
                  inputmode="numeric" aria-label="Total calories">
           <span class="unit">cal total</span>
         </div>
-        <button id="total-up" class="step step-lg" type="button" aria-label="Increase total">+</button>
+        <button id="total-up" class="step step-lg" type="button" aria-label="Increase total by 5">+5</button>
       </div>
-      <p class="hint">± steps by 5 and keeps ingredient ratios stable. Type a number to hit an exact target.</p>
+      <p class="hint">Adjusting this number keeps ingredient ratios stable.</p>
     </section>
 
     <section class="card" aria-label="Ingredients">
       <div class="section-label">Ingredients</div>
       <div id="ingredients"></div>
     </section>
-
-    <footer class="app-foot">
-      Grams are rounded to the nearest gram. Edit meals in <code>meals.js</code>.
-    </footer>
   </main>
 
   <script src="meals.js"></script>
