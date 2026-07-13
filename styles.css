@@ -77,14 +77,6 @@ body {
   background-position: right 14px center;
 }
 
-.meal-title {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--muted);
-  letter-spacing: .01em;
-}
-
 /* ---------- cards ---------- */
 .card {
   background: var(--card);
@@ -198,10 +190,13 @@ body {
 .row:first-child { border-top: 0; padding-top: 0; }
 .row:last-child { padding-bottom: 0; }
 
-.row-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.row-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
 .row-name { font-weight: 600; font-size: 16px; }
 .row-emoji { margin-right: 7px; font-size: 18px; }
-.row-grams { font-weight: 700; font-size: 16px; color: var(--accent-text); }
+/* grams is the hero number during meal prep */
+.row-grams { display: inline-flex; align-items: baseline; gap: 3px; color: var(--accent-text); white-space: nowrap; }
+.g-num { font-weight: 800; font-size: 26px; line-height: 1; }
+.g-unit { font-weight: 700; font-size: 13px; }
 
 .stepper {
   display: grid;

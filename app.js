@@ -371,6 +371,11 @@
     });
   }
 
+  // Grams is the key meal-prep number: big value + small unit. `g` is a number, so safe.
+  function gramsHTML(g) {
+    return '<span class="g-num">' + g + '</span><span class="g-unit">g</span>';
+  }
+
   // Update values in place without destroying focused inputs.
   function syncValues() {
     var meal = activeMeal();
@@ -385,7 +390,7 @@
       var gramsEl = el.ingredients.querySelector('[data-grams="' + cssEsc(ing.name) + '"]');
       var barEl = el.ingredients.querySelector('[data-bar="' + cssEsc(ing.name) + '"]');
       if (input && document.activeElement !== input) input.value = cal;
-      if (gramsEl) gramsEl.textContent = gramsFor(cal, calPerGOf(meal, ing.name)) + ' g';
+      if (gramsEl) gramsEl.innerHTML = gramsHTML(gramsFor(cal, calPerGOf(meal, ing.name)));
       if (barEl) barEl.style.width = (total > 0 ? (cal / total) * 100 : 0) + '%';
     });
 
@@ -400,7 +405,7 @@
   function liveGrams(name, value) {
     var meal = activeMeal();
     var gramsEl = el.ingredients.querySelector('[data-grams="' + cssEsc(name) + '"]');
-    if (gramsEl && !isNaN(value)) gramsEl.textContent = gramsFor(Math.max(0, value), calPerGOf(meal, name)) + ' g';
+    if (gramsEl && !isNaN(value)) gramsEl.innerHTML = gramsHTML(gramsFor(Math.max(0, value), calPerGOf(meal, name)));
   }
 
   function cssEsc(s) {
@@ -409,7 +414,6 @@
 
   function renderAll() {
     renderMealSelect();
-    el.mealTitle.textContent = activeMeal().name;
     renderConfigBar();
     renderIngredients();
     syncValues();
@@ -421,7 +425,6 @@
 
   function init() {
     el.mealSelect = document.getElementById('meal-select');
-    el.mealTitle = document.getElementById('meal-title');
     el.configChips = document.getElementById('config-chips');
     el.totalInput = document.getElementById('total-input');
     el.totalDown = document.getElementById('total-down');
