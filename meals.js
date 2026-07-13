@@ -23,9 +23,9 @@ const MEALS = [
       { name: 'Edamame',           calPerG: 1.25, emoji: '🫘' }, // 125 cal / 100g
       { name: 'Snap Peas in EVOO', calPerG: 0.8,  emoji: '🫛' }, // 80 cal / 100g
     ],
-    // Ratio target (grams): Salmon 233 / Rice 165 / Snap Peas 150; Edamame off (0).
+    // Ratio target (grams): Salmon 233 / Rice 165 / Edamame 96; Snap Peas off (0).
     // base cal = grams * calPerG, so the default/preset gram ratios match those portions.
-    base: { Salmon: 466, Rice: 215, Edamame: 0, 'Snap Peas in EVOO': 120 }, // ~801 cal full portion
+    base: { Salmon: 466, Rice: 215, Edamame: 120, 'Snap Peas in EVOO': 0 }, // ~801 cal full portion
     presets: [500, 600, 700],
   },
   {

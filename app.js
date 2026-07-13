@@ -135,15 +135,20 @@
     perMeal: {}, // { mealId: { allocations, selectedId } }
   };
 
-  // Seed per-meal state from session or defaults.
+  // Every meal starts on its first preset (the 500 chip) on each load.
   MEALS.forEach(function (meal) {
-    var prev = session && session.perMeal && session.perMeal[meal.id];
-    if (prev && prev.allocations) {
-      state.perMeal[meal.id] = { allocations: sanitize(meal, prev.allocations), selectedId: prev.selectedId || null };
-    } else {
-      state.perMeal[meal.id] = { allocations: cloneBase(meal), selectedId: 'default' };
-    }
+    state.perMeal[meal.id] = defaultSlot(meal);
   });
+
+  // Initial slot for a meal: the first preset applied (falls back to the base split).
+  function defaultSlot(meal) {
+    var presets = meal.presets || [];
+    if (presets.length) {
+      var p = presets[0];
+      return { allocations: scaleToTotal(namesOf(meal), meal.base, p), selectedId: 'preset:' + p };
+    }
+    return { allocations: cloneBase(meal), selectedId: 'default' };
+  }
 
   function cloneBase(meal) {
     var a = {};
@@ -161,16 +166,9 @@
   }
 
   function persist() {
-    var slim = { activeMealId: state.activeMealId, perMeal: {} };
-    for (var id in state.perMeal) {
-      if (state.perMeal.hasOwnProperty(id)) {
-        slim.perMeal[id] = {
-          allocations: state.perMeal[id].allocations,
-          selectedId: state.perMeal[id].selectedId,
-        };
-      }
-    }
-    save(KEYS.session, slim);
+    // Only the last active meal persists across reloads; every meal starts on
+    // the 500 preset each load (see defaultSlot).
+    save(KEYS.session, { activeMealId: state.activeMealId });
     save(KEYS.saved, savedConfigs);
   }
 
