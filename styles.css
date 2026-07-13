@@ -6,10 +6,11 @@
   --ink: #1a1d21;
   --muted: #6b7280;
   --line: #e3e6ea;
-  --accent: #0f766e;
-  --accent-ink: #ffffff;
-  --accent-soft: #d7f0ec;
-  --bar: #14b8a6;
+  --accent: #ff8f00;        /* Princeton orange — fills, bars, active chips */
+  --accent-ink: #241300;    /* text sitting ON the orange */
+  --accent-soft: #ffe6c2;   /* soft orange tint for pressed states */
+  --accent-text: #c2410c;   /* readable orange for text on light surfaces */
+  --bar: #ff8f00;
   --danger: #b91c1c;
   --radius: 14px;
   --tap: 46px;
@@ -22,10 +23,11 @@
     --ink: #eceef1;
     --muted: #9aa3ad;
     --line: #262b31;
-    --accent: #2dd4bf;
-    --accent-ink: #04211d;
-    --accent-soft: #123a35;
-    --bar: #2dd4bf;
+    --accent: #ff9e1f;        /* slightly brighter orange for dark surfaces */
+    --accent-ink: #241300;
+    --accent-soft: #3a2610;
+    --accent-text: #fdba74;   /* light orange for text on dark surfaces */
+    --bar: #ff9e1f;
     --danger: #f87171;
   }
 }
@@ -142,7 +144,7 @@ body {
   min-height: var(--tap);
   border: 1px dashed var(--line);
   background: transparent;
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 600;
   font-size: 15px;
   border-radius: var(--radius);
@@ -205,7 +207,7 @@ body {
 
 .row-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
 .row-name { font-weight: 600; font-size: 16px; }
-.row-grams { font-weight: 700; font-size: 16px; color: var(--accent); }
+.row-grams { font-weight: 700; font-size: 16px; color: var(--accent-text); }
 
 .stepper {
   display: grid;

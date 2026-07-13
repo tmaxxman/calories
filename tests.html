@@ -36,7 +36,7 @@
     }
 
     function sum(o) { return M.totalOf(o); }
-    function allMultiplesOf5(o) { for (var k in o) if (o[k] % 5 !== 0) return false; return true; }
+    function allIntegers(o) { for (var k in o) if (o[k] % 1 !== 0) return false; return true; }
 
     // roundTo5
     ok(M.roundTo5(0) === 0, 'roundTo5(0) = 0');
@@ -51,15 +51,15 @@
     var names = ['Salmon', 'Rice', 'Edamame'];
     var base = { Salmon: 300, Rice: 250, Edamame: 100 }; // total 650
 
-    // scaleToTotal: exact sum + all multiples of 5, across a sweep of targets
-    var sweepOk = true, multOk = true;
+    // scaleToTotal: exact sum + whole-calorie parts, across a sweep of targets
+    var sweepOk = true, intOk = true;
     for (var T = 200; T <= 1200; T += 5) {
       var a = M.scaleToTotal(names, base, T);
       if (sum(a) !== T) sweepOk = false;
-      if (!allMultiplesOf5(a)) multOk = false;
+      if (!allIntegers(a)) intOk = false;
     }
     ok(sweepOk, 'scaleToTotal sums EXACTLY to target across 200..1200');
-    ok(multOk, 'scaleToTotal keeps every ingredient a multiple of 5');
+    ok(intOk, 'scaleToTotal keeps every ingredient a whole number of calories');
 
     // ratios stay stable within rounding (<= 3 cal drift per ingredient at 650)
     var a650 = M.scaleToTotal(names, base, 650);
@@ -74,24 +74,27 @@
     var a647 = M.scaleToTotal(names, base, 647);
     ok(sum(a647) === 645, 'target 647 snaps to 645 and sums exactly');
 
-    // odd target that forces largest-remainder distribution
-    var a655 = M.scaleToTotal(names, base, 655);
-    ok(sum(a655) === 655 && allMultiplesOf5(a655), '655 distributes the extra 5 cleanly');
+    // THE BUG FIX: stepping the total by 5 nudges ALL ingredients, not just one
+    var a655 = M.scaleToTotal(names, base, 655); // from the 650 base
+    var moved = names.filter(function (n) { return a655[n] !== base[n]; }).length;
+    ok(sum(a655) === 655 && moved >= 2, 'stepping 650->655 moves >=2 ingredients (ratio stays stable)');
+    ok(a655.Salmon === 302 && a655.Rice === 252 && a655.Edamame === 101,
+       '650->655 => 302/252/101 (proportional, not all on one ingredient)');
 
-    // ratio drift bound: each ingredient within 3 cal of ideal for a range of totals
+    // ratio drift bound: each ingredient within 1 cal of the ideal proportional share
     var driftOk = true;
     [305, 515, 705, 905].forEach(function (T) {
       var a = M.scaleToTotal(names, base, T);
       names.forEach(function (n) {
         var ideal = (base[n] / 650) * T;
-        if (Math.abs(a[n] - ideal) > 3) driftOk = false;
+        if (Math.abs(a[n] - ideal) > 1) driftOk = false;
       });
     });
-    ok(driftOk, 'ratio drift stays within ~3 cal of ideal per ingredient');
+    ok(driftOk, 'ratio drift stays within ~1 cal of ideal per ingredient');
 
     // zero / missing weights -> even split summing to target
     var even = M.scaleToTotal(names, {}, 300);
-    ok(sum(even) === 300 && allMultiplesOf5(even), 'no weights -> even split, exact sum');
+    ok(sum(even) === 300 && allIntegers(even), 'no weights -> even split, exact sum');
 
     // zero target -> all zero
     var zero = M.scaleToTotal(names, base, 0);

@@ -24,19 +24,22 @@
   }
 
   /*
-   * Scale a meal to a target total while keeping ingredient ratios stable and
-   * every ingredient value a clean multiple of 5.
+   * Scale a meal to a target total while keeping the ratio between ingredients
+   * stable. The TOTAL is snapped to the nearest 5 cal, then split across the
+   * ingredients in proportion to `weights` (the current allocation, or the
+   * meal's base). Per-ingredient values are whole calories distributed with the
+   * largest-remainder method so they sum EXACTLY to the (rounded) total.
+   *
+   * Distributing in 1-cal units (not 5-cal units) is what makes EVERY ingredient
+   * shift together when the total nudges by 5 — instead of the whole +5 landing
+   * on a single ingredient.
    *
    *   names        ordered ingredient names
    *   weights      { name: number } — the ratio source (current alloc, or base)
    *   targetTotal  desired total calories (snapped to nearest 5)
-   *
-   * Uses the largest-remainder method so the parts always sum EXACTLY to the
-   * (rounded) target.
    */
   function scaleToTotal(names, weights, targetTotal) {
-    var T = Math.max(0, roundTo5(targetTotal));
-    var units = T / STEP; // integer number of 5-cal units to distribute
+    var T = Math.max(0, roundTo5(targetTotal)); // total stays on the 5-cal grid
     var alloc = {};
     var i;
 
@@ -45,28 +48,28 @@
 
     // No usable ratio -> even split.
     if (wsum <= 0) {
-      var each = names.length ? Math.floor(units / names.length) : 0;
-      for (i = 0; i < names.length; i++) alloc[names[i]] = each * STEP;
-      var leftover = units - each * names.length;
-      for (i = 0; i < leftover; i++) alloc[names[i]] += STEP;
+      var each = names.length ? Math.floor(T / names.length) : 0;
+      for (i = 0; i < names.length; i++) alloc[names[i]] = each;
+      var leftover = T - each * names.length;
+      for (i = 0; i < leftover; i++) alloc[names[i]] += 1;
       return alloc;
     }
 
-    // Ideal quota per ingredient, in units of 5.
+    // Ideal proportional quota per ingredient (in whole calories).
     var quotas = [];
     for (i = 0; i < names.length; i++) {
-      var q = (Math.max(0, weights[names[i]] || 0) / wsum) * units;
+      var q = (Math.max(0, weights[names[i]] || 0) / wsum) * T;
       var base = Math.floor(q);
       quotas.push({ name: names[i], base: base, frac: q - base });
-      alloc[names[i]] = base * STEP;
+      alloc[names[i]] = base;
     }
 
-    // Hand out the remaining units to the largest fractional remainders.
+    // Hand out the leftover calories to the largest fractional remainders.
     var assigned = 0;
     for (i = 0; i < quotas.length; i++) assigned += quotas[i].base;
-    var rem = units - assigned;
+    var rem = T - assigned;
     quotas.sort(function (a, b) { return b.frac - a.frac; });
-    for (i = 0; i < rem; i++) alloc[quotas[i % quotas.length].name] += STEP;
+    for (i = 0; i < rem; i++) alloc[quotas[i % quotas.length].name] += 1;
 
     return alloc;
   }
@@ -144,7 +147,7 @@
 
   function cloneBase(meal) {
     var a = {};
-    namesOf(meal).forEach(function (n) { a[n] = roundTo5(meal.base[n] || 0); });
+    namesOf(meal).forEach(function (n) { a[n] = Math.max(0, Math.round(meal.base[n] || 0)); });
     return a;
   }
 
@@ -152,7 +155,7 @@
   function sanitize(meal, alloc) {
     var out = {};
     namesOf(meal).forEach(function (n) {
-      out[n] = roundTo5(typeof alloc[n] === 'number' ? Math.max(0, alloc[n]) : (meal.base[n] || 0));
+      out[n] = Math.max(0, Math.round(typeof alloc[n] === 'number' ? alloc[n] : (meal.base[n] || 0)));
     });
     return out;
   }
@@ -195,7 +198,7 @@
 
   function setIngredient(name, value) {
     var slot = activeSlot();
-    slot.allocations[name] = Math.max(0, roundTo5(value || 0));
+    slot.allocations[name] = Math.max(0, Math.round(value || 0));
     slot.selectedId = null;
     persist();
     syncValues();

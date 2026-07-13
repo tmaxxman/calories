@@ -42,10 +42,11 @@ calorie split (`base`), and quick-pick `presets`. Edit that file and reload.
 
 ## How the math works
 
-Ingredient calorie values are always multiples of 5. When you scale the whole meal, each
-ingredient is scaled proportionally, rounded to the nearest 5, and any leftover is handed
-out via the largest-remainder method so the parts **sum exactly** to the target. Grams are
-`calories ÷ calPerG`, rounded to the nearest gram.
+When you scale the whole meal, the total snaps to the nearest 5 calories and is split across
+the ingredients in proportion to their current split — so **every** ingredient shifts
+together and the ratios stay stable. Per-ingredient values are whole calories handed out via
+the largest-remainder method so they **sum exactly** to the total. The individual `+`/`−`
+buttons move one ingredient by 5. Grams are `calories ÷ calPerG`, rounded to the nearest gram.
 
 Open [`tests.html`](./tests.html) in a browser to run the math test suite (should be all
 green).
